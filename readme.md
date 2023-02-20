@@ -11,6 +11,11 @@ If you selected a plugin, the complete link will be copied to the clipboard and 
 
 The plugin uses the WordPress API, documentation can be found at <https://codex.wordpress.org/WordPress.org_API#Plugins>.
 
+## Installation
+
+Download and extract zip-file or clone GitHub repo,
+run `pip install -r requirements.txt`
+
 ## License
 
 MIT License
