@@ -21,7 +21,7 @@ import requests
 
 # script settings
 config = {
-    "version": "0.3.0",
+    "version": "0.4.0",
     "programm": "wpplugin",
     "description": "Retrives plugin links from the WordPress repository",
     "copyright": "(c) Bego Mario Garde, 2023",
@@ -50,8 +50,11 @@ def main():
     link = render_link(wp_request, selected_plugin_number)
 
     # copy link to clipboard and print output
-    pyperclip.copy(link)
-    print(f"Copied to your clipboard:\n{link}")
+    try:
+        pyperclip.copy(link)
+        print(f"Copied to your clipboard:\n{link}")
+    except pyperclip.PyperclipException:
+        print(f"Copy:\n\n{link}\n")
 
 
 def validate_arguments() -> str:
