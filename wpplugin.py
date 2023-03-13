@@ -21,7 +21,7 @@ import requests
 
 # script settings
 config = {
-    "version": "0.4.0",
+    "version": "0.4.1",
     "programm": "wpplugin",
     "description": "Retrives plugin links from the WordPress repository",
     "copyright": "(c) Bego Mario Garde, 2023",
@@ -66,7 +66,7 @@ def validate_arguments() -> str:
     )
     # parser.add_argument("plugin")
     parser.add_argument(
-        "-v", "--version", action="version", version="%(prog)s 0.3.0"
+        "-v", "--version", action="version", version=f"%(prog)s {config['version']}"
     )
     parser.add_argument(
         "name",
