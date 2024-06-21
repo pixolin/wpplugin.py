@@ -21,7 +21,7 @@ import requests
 
 # script settings
 config = {
-    "version": "0.4.1",
+    "version": "0.4.3",
     "programm": "wpplugin",
     "description": "Retrives plugin links from the WordPress repository",
     "copyright": "(c) Bego Mario Garde, 2023",
@@ -37,7 +37,7 @@ config = {
 
 def main():
     """Run script. See comments below."""
-    # has the user correctly passed as plugin name?
+    # has the user correctly passed a plugin name?
     pluginname: str = validate_arguments()
 
     # search for the plugin using WordPress API
@@ -175,9 +175,7 @@ def ask_user_prompt(passes):
     Returns:
         str: prompt
     """
-    prompt: str = (
-        "   Enter plugin number or just press enter for first match.\n"
-    )
+    prompt: str = "   Enter plugin number or just press enter for first match.\n"
     if passes < 3:
         prompt += "   Enter [n] for next 10 plugins, enter [q] to abort.\n\n"
     else:
@@ -222,7 +220,7 @@ def render_link(response_dict: dict, selection: int) -> str:
     name = html.unescape(selected["name"])
     url = config["pluginurl"]
 
-    plugin_link = '<a href="' + url + slug + '/"><b>' + name + "</b></a>"
+    plugin_link = '<a href="' + str(url) + slug + '/">' + name + "</a>"
     return plugin_link
 
 
