@@ -20,33 +20,28 @@ import pyperclip
 import requests
 
 # script settings
+# fmt: off
 config = {
-    "version": "0.4.3",
-    "programm": "wpplugin",
+    "version"    : "0.4.4",
+    "programm"   : "wpplugin",
     "description": "Retrives plugin links from the WordPress repository",
-    "copyright": "(c) Bego Mario Garde, 2023",
-    "url": "https://api.wordpress.org/plugins/info/1.2/",
-    "params": {
-        "action": "query_plugins",
+    "copyright"  : "(c) Bego Mario Garde, 2023",
+    "url"        : "https://api.wordpress.org/plugins/info/1.2/",
+    "params"     : {
+        "action"         : "query_plugins",
         "request[search]": "",
     },
-    "timeout": 20,
+    "timeout"  : 20,
     "pluginurl": "https://de.wordpress.org/plugins/",
 }
+# fmt: on
 
 
 def main():
     """Run script. See comments below."""
-    # has the user correctly passed a plugin name?
-    pluginname: str = validate_arguments()
-
-    # search for the plugin using WordPress API
-    wp_request: object = request_plugins(pluginname)
-
-    # print a list of search result and let user select
-    selected_plugin_number: int = let_user_select(wp_request)
-
-    # render a link from selected plugin data
+    pluginname = validate_arguments()
+    wp_request = request_plugins(pluginname)
+    selected_plugin_number = let_user_select(wp_request)
     link = render_link(wp_request, selected_plugin_number)
 
     # copy link to clipboard and print output
@@ -59,66 +54,44 @@ def main():
 
 def validate_arguments() -> str:
     """Validate script arguments"""
-    parser: object = argparse.ArgumentParser(
+    parser = argparse.ArgumentParser(
         prog=config["programm"],
         description=config["description"],
         epilog=config["copyright"],
     )
-    # parser.add_argument("plugin")
     parser.add_argument(
         "-v", "--version", action="version", version=f"%(prog)s {config['version']}"
     )
     parser.add_argument(
-        "name",
+        "plugin_name",
         type=str,
         action="store",
-        nargs=1,
-        help=(
-            "The name of the plugin you want to find in the wp.org plugin"
-            " repository."
-        ),
+        help="Name of the plugin to search for in the WordPress plugin repository.",
     )
     args = parser.parse_args()
-
-    # return the name of the desired plugin
-    return args.name[0].lower()
+    return args.plugin_name.lower()
 
 
-def request_plugins(searchterm: str) -> dict:
-    """use searchterm in a query with WordPress API
-    see https://codex.wordpress.org/WordPress.org_API
+def request_plugins(search_term: str) -> dict:
+    """Request plugins from WordPress API using search term.
 
     Args:
-        searchterm (str): the plugin you are searching for
+        search_term (str): The plugin you are searching for.
 
     Returns:
-        dict: plugin dictionary with names and slugs
+        dict: Dictionary with plugin names and slugs.
     """
-    # use config settings as paramaters and assign searchterm
-    url = config["url"]
-    config["params"]["request[search]"] = searchterm
-    params = config["params"]
-    timeout = config["timeout"]
+    params = dict(config["params"])
+    params["request[search]"] = search_term
 
     try:
-        response = requests.get(url=url, params=params, timeout=timeout)
+        response = requests.get(config["url"], params=params, timeout=config["timeout"])
         response.raise_for_status()
-    except requests.exceptions.HTTPError:
-        print("HTTP Error")
-        sys.exit(1)
-    except requests.exceptions.ConnectionError:
-        print("Error Connecting")
-        sys.exit(1)
-    except requests.exceptions.Timeout:
-        print("Timeout Error")
-        sys.exit(1)
-    except requests.exceptions.RequestException:
-        print("OOps: Something Else")
+    except requests.exceptions.RequestException as e:
+        print(f"Error occurred: {e}")
         sys.exit(1)
 
-    json_response = response.json()
-
-    return json_response
+    return response.json()
 
 
 def let_user_select(pluginlist: dict) -> int:
@@ -139,7 +112,7 @@ def let_user_select(pluginlist: dict) -> int:
         passes = 3
 
     while True:
-        prompt = ask_user_prompt(passes=passes)
+        prompt = get_user_prompt(passes)
         user_input = input(prompt).strip()
 
         passes += 1
@@ -166,21 +139,12 @@ def let_user_select(pluginlist: dict) -> int:
     return number
 
 
-def ask_user_prompt(passes):
-    """give user instructions according to number of passes
-
-    Args:
-        passes (int): number of passes
-
-    Returns:
-        str: prompt
-    """
-    prompt: str = "   Enter plugin number or just press enter for first match.\n"
+def get_user_prompt(passes):
+    """Returns instructions for user based on number of passes."""
     if passes < 3:
-        prompt += "   Enter [n] for next 10 plugins, enter [q] to abort.\n\n"
+        return "Enter plugin number or press enter for first match. Enter [n] for next 10 plugins, enter [q] to abort.\n\n"
     else:
-        prompt += "   Enter [q] to abort.\n\n"
-    return prompt
+        return "Enter plugin number or press enter for first match. Enter [q] to abort.\n\n"
 
 
 def list_plugins(jsonlist: dict, start: int, stop: int) -> str:
@@ -205,23 +169,22 @@ def list_plugins(jsonlist: dict, start: int, stop: int) -> str:
     return output
 
 
-def render_link(response_dict: dict, selection: int) -> str:
-    """use plugin list and selection as index to render link
+def render_link(plugins: dict, selected_index: int) -> str:
+    """Render link to plugin page using plugin list and selection as index.
 
     Args:
-        response_dict (dict): list of plugins
-        selection (int): index of item in list of plugins
+        plugins (dict): List of plugins.
+        selected_index (int): Index of selected plugin.
 
     Returns:
-        str: rendered link to plugin page
+        str: Rendered link to plugin page.
     """
-    selected = response_dict["plugins"][selection]
-    slug = selected["slug"]
-    name = html.unescape(selected["name"])
-    url = config["pluginurl"]
+    selected_plugin = plugins["plugins"][selected_index]
+    slug = selected_plugin["slug"]
+    name = html.unescape(selected_plugin["name"])
+    plugin_url = config["pluginurl"]
 
-    plugin_link = '<a href="' + str(url) + slug + '/">' + name + "</a>"
-    return plugin_link
+    return f'<a href="{plugin_url}{slug}/">{name}</a>'
 
 
 if __name__ == "__main__":
